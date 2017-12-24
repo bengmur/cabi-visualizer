@@ -10,6 +10,14 @@ from dateutil.parser import parse
 import mechanize
 
 
+class LoginException(Exception):
+    pass
+
+
+class ScraperException(Exception):
+    pass
+
+
 class CaBiUser(object):
 
     def __init__(self, username, password):
@@ -18,10 +26,14 @@ class CaBiUser(object):
 
         self.trips_link = None  # qualified with member ID
         self.membership_start_date = None
-        self.trips_data = None
 
 
 class CaBiScraper(object):
+    """Capital Bikeshare provides no easy way access user data through an API,
+    as it does for overall system data. To get around this, we can scrape it
+    manually from the user's trip page. Taking into consideration the login
+    form with CSRF protection, as well as route paths relying on a distinct
+    member ID, the easiest way to do this is with a stateful web browser."""
 
     def __init__(self, username, password):
         self.cabi_user = CaBiUser(username, password)
@@ -29,52 +41,49 @@ class CaBiScraper(object):
         self.browser = mechanize.Browser()
         self.browser.set_handle_robots(False)
 
-    def _handle_http_error(self, e):
-        print "%d: %s" % (e.code, e.msg)
-        return False
-
-    def authenticate(self):
+    def _authenticate(self):
         try:
             self.browser.open(
                 'https://secure.capitalbikeshare.com/profile/login'
             )
-        except HTTPError as e:
-            return self._handle_http_error(e)
+        except HTTPError:
+            raise ScraperException
 
         try:
             self.browser.select_form(action=lambda url: 'login' in url)
         except mechanize._mechanize.FormNotFoundError:
-            print 'Form not found'
-            return False
+            # Form not found
+            raise ScraperException
 
         self.browser.form['_username'] = self.cabi_user.username
         self.browser.form['_password'] = self.cabi_user.password
 
         try:
             self.browser.submit()
-        except HTTPError as e:
-            return self._handle_http_error(e)
+        except HTTPError:
+            raise ScraperException
 
         if 'login' in self.browser.response().geturl():
-            return False
+            raise LoginException
 
-        return True
-
-    def init_user_data(self):
+    def _init_user_data(self):
         try:
             trips_link = self.browser.find_link(url_regex='/trips/')
         except mechanize._mechanize.LinkNotFoundError:
-            print 'Member ID qualified link not found'
-            return False
+            # Member ID qualified link not found
+            raise ScraperException
         self.cabi_user.trips_link = trips_link.absolute_url
 
         soup = BeautifulSoup(self.browser.response(), 'html5lib')
         start_date = str(
             soup.find(class_='ed-panel__info__value_member-since').string
         )
-        self.cabi_user.membership_start_date = parse(start_date)
+        try:
+            self.cabi_user.membership_start_date = parse(start_date)
+        except (ValueError, OverflowError):
+            raise ScraperException
 
-    def get_trips_data(self, start, end):
+    def _get_trips_data(self, start, end):
         date_format = '%m/%d/%Y'
 
         data_query = {
@@ -86,8 +95,8 @@ class CaBiScraper(object):
         )
         try:
             self.browser.open(data_url)
-        except HTTPError as e:
-            return self._handle_http_error(e)
+        except HTTPError:
+            raise ScraperException
 
         soup = BeautifulSoup(self.browser.response(), 'html5lib')
         raw_trips = soup.find_all(class_='ed-table__item_trip')
@@ -113,6 +122,9 @@ class CaBiScraper(object):
         return trips
 
     def get_all_trips_data(self):
+        self._authenticate()
+        self._init_user_data()
+
         one_year = timedelta(days=365)  # Inexact, but sufficient for our usage
         date_cursor = self.cabi_user.membership_start_date
         date_ranges = []
@@ -123,6 +135,6 @@ class CaBiScraper(object):
 
         trips = []
         for start, end in date_ranges:
-            trips.extend(self.get_trips_data(start, end))
+            trips.extend(self._get_trips_data(start, end))
 
         return trips
