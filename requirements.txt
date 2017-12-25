@@ -1,5 +1,7 @@
 beautifulsoup4==4.6.0
 Flask==0.12.2
+googlemaps==2.5.1
 mechanize==0.3.6
 python-dateutil==2.6.1
-setuptools==38.2.4
+requests==2.18.4
+setuptools==38.2.5

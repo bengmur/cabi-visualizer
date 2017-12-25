@@ -11,6 +11,5 @@ setup(
     author='Benjamin Gmurczyk',
     author_email='b.gmurczyk@gmail.com',
     license='MIT',
-    packages=['visualizer'],
-    zip_safe=False,
+    packages=['cabi_visualizer'],
 )

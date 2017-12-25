@@ -1,2 +1,8 @@
+# Application
 *.egg-info/
+config.py
 venv/
+
+# Static
+node_modules/
+static/dist/
