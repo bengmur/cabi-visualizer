@@ -1,6 +1,6 @@
 import axios from "axios";
 import React from "react";
-import { Panel } from "react-bootstrap";
+import { PageHeader, Grid, Row, Col } from "react-bootstrap";
 
 import PolylineMap from "./PolylineMap";
 import LoginForm from "./LoginForm";
@@ -39,21 +39,27 @@ export default class App extends React.Component {
 
     render() {
         return (
-            <Panel
-                header="Capital Bikeshare Member Data Visualizer"
-                bsStyle="primary"
-            >
-                {this.state.trips ? (
-                     <PolylineMap encodedPaths={this.state.trips} />
-                ) : (
-                     <LoginForm
-                         handleInputChange={this.handleInputChange}
-                         handleLoginFormSubmit={this.handleLoginFormSubmit}
-                         isLoading={this.state.isLoadingData}
-                         loadingText="Generating Visualization..."
-                         submitText="Generate Visualization" />
-                )}
-            </Panel>
+            <Grid fluid={true}>
+                <Row>
+                    <Col xs={12}>
+                        <PageHeader>Capital Bikeshare Member Data Visualizer</PageHeader>
+                    </Col>
+                </Row>
+                <Row>
+                    <Col xs={12}>
+                        {this.state.trips ? (
+                             <PolylineMap encodedPaths={this.state.trips} />
+                        ) : (
+                             <LoginForm
+                                 handleInputChange={this.handleInputChange}
+                                 handleLoginFormSubmit={this.handleLoginFormSubmit}
+                                 isLoading={this.state.isLoadingData}
+                                 loadingText="Generating Visualization..."
+                                 submitText="Generate Visualization" />
+                        )}
+                    </Col>
+                </Row>
+            </Grid>
         );
     }
 }
