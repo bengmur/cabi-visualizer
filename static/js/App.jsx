@@ -2,7 +2,7 @@ import axios from "axios";
 import React from "react";
 import { PageHeader, Grid, Row, Col } from "react-bootstrap";
 
-import PolylineMap from "./PolylineMap";
+import PolylineHeatMap from "./PolylineHeatMap";
 import LoginForm from "./LoginForm";
 
 export default class App extends React.Component {
@@ -48,7 +48,7 @@ export default class App extends React.Component {
                 <Row>
                     <Col xs={12}>
                         {this.state.trips ? (
-                             <PolylineMap encodedPaths={this.state.trips} />
+                             <PolylineHeatMap encodedPaths={this.state.trips} />
                         ) : (
                              <LoginForm
                                  handleInputChange={this.handleInputChange}
