@@ -7,14 +7,10 @@ class GoogleMap(object):
             key=api_key,
         )
 
-        self.polylines = []
-
-    def add_polyline_between_places(self, start, end, mode):
+    def get_polyline_between_places(self, start, end, mode=None):
         directions_result = self.gmaps.directions(
             start,
             end,
             mode=mode,
         )
-        self.polylines.append(
-            directions_result[0]['overview_polyline']['points']
-        )
+        return directions_result[0]['overview_polyline']['points']

@@ -4,19 +4,19 @@ import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from "react-google-m
 
 export default class PolylineHeatMap extends React.Component {
     getHeatMapColorHex(weight) {
-        /* 0 < weight <= 1 */
+        /* 0 <= weight <= 1 */
 
         let gradientColors;
         let weightBetweenColors;
-        if (weight <= 0.5) {
+        if (weight < 0.5) {
             /* Green to yellow */
             gradientColors = [[0,255,0], [255,255,0]];
-            /* Normalize weight from (0, 0.5] to (0, 1] */
+            /* Normalize weight from [0, 0.5) to [0, 1) */
             weightBetweenColors = weight / 0.5;
         } else {
             /* Yellow to red */
             gradientColors = [[255,255,0], [255,0,0]];
-            /* Normalize weight from (0.5, 1] to (0, 1] */
+            /* Normalize weight from [0.5, 1] to [0, 1] */
             weightBetweenColors = (weight - 0.5) / 0.5;
         }
 

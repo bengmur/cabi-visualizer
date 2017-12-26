@@ -2,7 +2,6 @@ from abc import (
     ABCMeta,
     abstractmethod,
 )
-from collections import defaultdict
 
 import requests
 
@@ -25,20 +24,6 @@ class Locations(object):
         ]
         """
         pass
-
-    @classmethod
-    def determine_location_frequencies(cls, locations):
-        """Returns a dict of format:
-        {
-            ('start_location', 'end_location'): frequency,  # int
-            ...
-        }
-        """
-        location_frequencies = defaultdict(int)
-        for location in locations:
-            location_frequencies[location] += 1
-
-        return location_frequencies
 
 
 class CaBiLocations(Locations):

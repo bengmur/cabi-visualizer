@@ -13,8 +13,18 @@ from cabi_visualizer.lib.scraper import (
     LoginException,
     ScraperException,
 )
+from cabi_visualizer.lib.stats import (
+    determine_frequencies,
+    normalize_value,
+)
 
 views = Blueprint('views', __name__)
+
+
+def _require_request_params(request_data, params):
+    for param in params:
+        if param not in request_data:
+            abort(400)
 
 
 @views.route('/')
@@ -24,15 +34,13 @@ def index():
 
 @views.route('/api/locations', methods=['POST'])
 def locations():
-    login_data = request.get_json(force=True)
-    if 'username' not in login_data or 'password' not in login_data:
-        abort(400)
+    request_data = request.get_json(force=True)
+    _require_request_params(request_data, ['username', 'password'])
 
     # Retrieve locations for visualization
     cabi_locations = CaBiLocations(
-        # Request raises HTTP 400 if login data not present
-        login_data['username'],
-        login_data['password'],
+        request_data['username'],
+        request_data['password'],
     )
     try:
         locations = cabi_locations.get_locations()
@@ -41,10 +49,59 @@ def locations():
     except ScraperException:
         abort(502)
 
-    locations = CaBiLocations.determine_location_frequencies(locations)
+    return jsonify({
+        'data': {
+            'location_pairs': locations,
+        },
+    })
+
+
+@views.route('/api/calculate-normalized-frequencies', methods=['POST'])
+def calculate_normalized_frequencies():
+    request_data = request.get_json(force=True)
+    _require_request_params(request_data, ['elements'])
+
+    elements = request_data['elements']
+    if not elements:
+        return jsonify({
+            'data': {
+                'normalized_frequencies': [],
+            },
+        })
+
+    frequencies = determine_frequencies(elements)
+
+    # Normalize with respect to a 0 frequency
+    max_ = max(frequencies.values())
+    normalized_frequencies = {
+        key: normalize_value(val, 0, max_)
+        for key, val in frequencies.iteritems()
+    }
+
+    return jsonify({
+        'data': {
+            'normalized_frequencies': [
+                {'element': key, 'frequency': val}
+                for key, val in normalized_frequencies.iteritems()
+            ]
+        },
+    })
+
+
+@views.route('/api/routing-polyline', methods=['POST'])
+def routing_polyline():
+    request_data = request.get_json(force=True)
+    _require_request_params(request_data, ['start', 'end'])
 
     gmap = GoogleMap(current_app.config['GOOGLE_API_KEY'])
-    for location in locations:
-        gmap.add_polyline_between_places(location[0], location[1], 'bicycling')
+    polyline = gmap.get_polyline_between_places(
+        request_data['start'],
+        request_data['end'],
+        request_data.get('mode'),
+    )
 
-    return jsonify(gmap.polylines)
+    return jsonify({
+        'data': {
+            'polyline': polyline,
+        },
+    })
