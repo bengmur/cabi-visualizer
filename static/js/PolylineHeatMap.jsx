@@ -50,11 +50,11 @@ export default class PolylineHeatMap extends React.Component {
                 defaultZoom={13}
                 defaultCenter={{ lat: 38.898, lng: -77.035 }}
             >
-                {this.props.encodedPaths.map((encodedPath) => (
+                {this.props.weightedPolylines.map((weightedPolyline) => (
                     <Polyline
-                        key={encodedPath}
-                        path={this.getLatLngsFromEncodedPath(encodedPath)}
-                        options={{strokeColor: this.getHeatMapColorHex(Math.random())} /* TODO */}
+                        key={weightedPolyline.path}
+                        path={this.getLatLngsFromEncodedPath(weightedPolyline.path)}
+                        options={{strokeColor: this.getHeatMapColorHex(weightedPolyline.weight), zIndex: weightedPolyline.weight}}
                     />
                 ))}
             </GoogleMap>

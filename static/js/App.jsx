@@ -62,7 +62,10 @@ export default class App extends React.Component {
                     end: locationData.element[1],
                     mode: 'bicycling'
                 }).then((response) => {
-                    this.trips.push(response.data.data.polyline);
+                    this.trips.push({
+                        path: response.data.data.polyline,
+                        weight: locationData.frequency,
+                    });
                     this.setState(prevState => {
                         let loadingStates = prevState.loadingStates;
                         loadingStates.pop();
@@ -90,7 +93,7 @@ export default class App extends React.Component {
                 <Row>
                     <Col xs={12}>
                         {this.state.tripsLoaded ? (
-                             <PolylineHeatMap encodedPaths={this.trips} />
+                             <PolylineHeatMap weightedPolylines={this.trips} />
                         ) : [
                              this.state.isLoadingData && (
                                  <Well key="well">
