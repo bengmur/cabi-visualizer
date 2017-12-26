@@ -22,8 +22,8 @@ export default class PolylineHeatMap extends React.Component {
 
         const fromColor = gradientColors[0];
         const toColor = gradientColors[1];
-        const fromWeight = weightBetweenColors;
-        const toWeight = 1 - weightBetweenColors;
+        const fromWeight = 1 - weightBetweenColors;
+        const toWeight = weightBetweenColors;
         const rgbColor = [0, 1, 2].map(i => (
             Math.round(fromColor[i] * fromWeight + toColor[i] * toWeight)
         ));
