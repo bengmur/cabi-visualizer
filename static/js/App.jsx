@@ -47,14 +47,19 @@ export default class App extends React.Component {
 
     handleLoginFormSubmit(e) {
         this.trips = [];
-        this.setState({
-            isLoadingData: true
-        });
+        this.setState({isLoadingData: true});
         this.resetLoadingStates();
         this.addLoadingState('Scraping your Capital Bikeshare trip data');
         axios.post('/api/locations', {
             username: this.state.username,
             password: this.state.password,
+        }).catch((error) => {
+            if (error.response && error.response.status == 400) {
+                this.addLoadingState('Capital Bikeshare authentication failed, check your login details');
+                this.setState({isLoadingData: false});
+                return Promise.reject(Error('auth'));
+            }
+            return Promise.reject(error);
         }).then((response) => {
             this.addLoadingState('Calculating normalized frequencies of unique trips');
             const locationPairs = response.data.data.location_pairs;
@@ -88,6 +93,11 @@ export default class App extends React.Component {
                 googleMapsApiKey: response.data.data.maps_api_key,
                 showMap: true
             });
+        }).catch((error) => {
+            if (error.message !== 'auth') {
+                this.addLoadingState('Uh oh, something went wrong');
+                this.setState({isLoadingData: false});
+            }
         });
 
         e.preventDefault();
@@ -107,7 +117,7 @@ export default class App extends React.Component {
                              <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.uniqueTripCount} />,
                              <PolylineHeatMap key="1" apiKey={this.state.googleMapsApiKey} weightedPolylines={this.trips} />
                         ] : [
-                             this.state.isLoadingData && <StatusWell key="0" statuses={this.state.loadingStates} />,
+                             this.state.loadingStates && <StatusWell key="0" statuses={this.state.loadingStates} />,
                              <LoginForm
                                  key="1"
                                  handleInputChange={this.handleInputChange}
