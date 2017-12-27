@@ -65,7 +65,7 @@ export default class App extends React.Component {
             const normalizedLocationFrequencies = response.data.data.normalized_frequencies;
             this.setState({uniqueTripCount: normalizedLocationFrequencies.length});
             this.addLoadingState(`Generating trip polylines (0 of ${this.state.uniqueTripCount})`);
-            for (let locationData of normalizedLocationFrequencies) {
+            return Promise.all(normalizedLocationFrequencies.map((locationData) => (
                 axios.post('/api/maps/routing-polyline', {
                     start: locationData.element[0],
                     end: locationData.element[1],
@@ -78,19 +78,18 @@ export default class App extends React.Component {
                     this.updateLoadingState(
                         `Generating trip polylines (${this.trips.length} of ${this.state.uniqueTripCount})`
                     );
+                })
+            )));
+        }).then(() => {
+            this.addLoadingState('Fetching Google Maps API key');
+            return axios.get('/api/maps/api-key');
+        }).then((response) => {
+            this.setState({
+                googleMapsApiKey: response.data.data.maps_api_key,
+                showMap: true
+            });
+        });
 
-                    if (this.trips.length === this.state.uniqueTripCount) {
-                        this.addLoadingState('Fetching Google Maps API key');
-                        axios.get('/api/maps/api-key').then((response) => {
-                            this.setState({
-                                googleMapsApiKey: response.data.data.maps_api_key,
-                                showMap: true
-                            });
-                        });
-                    }
-                });
-            }
-        })
         e.preventDefault();
     }
 
