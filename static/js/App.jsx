@@ -54,7 +54,7 @@ export default class App extends React.Component {
             username: this.state.username,
             password: this.state.password,
         }).catch((error) => {
-            if (error.response && error.response.status == 400) {
+            if (error.response && error.response.status == 401) {
                 this.addLoadingState('Capital Bikeshare authentication failed, check your login details');
                 this.setState({isLoadingData: false});
                 return Promise.reject(Error('auth'));

@@ -45,7 +45,7 @@ def locations():
     try:
         locations = cabi_locations.get_locations()
     except LoginException:
-        abort(400)
+        abort(401)
     except ScraperException:
         abort(502)
 
