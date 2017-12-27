@@ -2,12 +2,10 @@ from datetime import (
     datetime,
     timedelta,
 )
-from urllib import urlencode
-from urllib2 import HTTPError
+from urllib.parse import urlencode
 
-from bs4 import BeautifulSoup
 from dateutil.parser import parse
-import mechanize
+import mechanicalsoup
 import requests
 
 
@@ -34,45 +32,44 @@ class CaBiScraper(object):
     def __init__(self, username, password):
         self.cabi_user = CaBiUser(username, password)
 
-        self.browser = mechanize.Browser()
-        self.browser.set_handle_robots(False)
+        self.browser = mechanicalsoup.StatefulBrowser()
 
     def _authenticate(self):
-        try:
-            self.browser.open(
-                'https://secure.capitalbikeshare.com/profile/login'
-            )
-        except HTTPError:
+        response = self.browser.open(
+            'https://secure.capitalbikeshare.com/profile/login'
+        )
+        if not response.ok:
             raise ScraperException
 
         try:
-            self.browser.select_form(action=lambda url: 'login' in url)
-        except mechanize._mechanize.FormNotFoundError:
+            self.browser.select_form(selector='form[action*="login"]')
+        except mechanicalsoup.LinkNotFoundError:
             # Form not found
             raise ScraperException
 
-        self.browser.form['_username'] = self.cabi_user.username
-        self.browser.form['_password'] = self.cabi_user.password
+        self.browser['_username'] = self.cabi_user.username
+        self.browser['_password'] = self.cabi_user.password
 
-        try:
-            self.browser.submit()
-        except HTTPError:
+        response = self.browser.submit_selected()
+        if not response.ok:
             raise ScraperException
 
-        if 'login' in self.browser.response().geturl():
+        if 'login' in self.browser.get_url():
             raise LoginException
 
     def _init_user_data(self):
         try:
             trips_link = self.browser.find_link(url_regex='/trips/')
-        except mechanize._mechanize.LinkNotFoundError:
+        except mechanicalsoup.LinkNotFoundError:
             # Member ID qualified link not found
             raise ScraperException
-        self.cabi_user.trips_link = trips_link.absolute_url
+        self.cabi_user.trips_link = self.browser.absolute_url(
+            trips_link['href']
+        )
 
-        soup = BeautifulSoup(self.browser.response(), 'html5lib')
+        page = self.browser.get_current_page()
         start_date = str(
-            soup.find(class_='ed-panel__info__value_member-since').string
+            page.find(class_='ed-panel__info__value_member-since').string
         )
         try:
             self.cabi_user.membership_start_date = parse(start_date)
@@ -89,13 +86,13 @@ class CaBiScraper(object):
         data_url = (
             self.cabi_user.trips_link + '/print?' + urlencode(data_query)
         )
-        try:
-            self.browser.open(data_url)
-        except HTTPError:
+
+        response = self.browser.open(data_url)
+        if not response.ok:
             raise ScraperException
 
-        soup = BeautifulSoup(self.browser.response(), 'html5lib')
-        raw_trips = soup.find_all(class_='ed-table__item_trip')
+        page = self.browser.get_current_page()
+        raw_trips = page.find_all(class_='ed-table__item_trip')
 
         dom_class_translation = {
             'ed-table__item__info_trip-start-date': 'start_date',
@@ -108,7 +105,7 @@ class CaBiScraper(object):
         trips = []
         for raw_trip in raw_trips:
             trip = {}
-            for class_, prop_key in dom_class_translation.iteritems():
+            for class_, prop_key in dom_class_translation.items():
                 prop_data = raw_trip.find(class_=class_)
                 prop_data = prop_data.find(text=True, recursive=False)
                 prop_data = str(prop_data).strip()

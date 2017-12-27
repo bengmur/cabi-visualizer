@@ -75,14 +75,14 @@ def calculate_normalized_frequencies():
     max_ = max(frequencies.values())
     normalized_frequencies = {
         key: normalize_value(val, 0, max_)
-        for key, val in frequencies.iteritems()
+        for key, val in frequencies.items()
     }
 
     return jsonify({
         'data': {
             'normalized_frequencies': [
                 {'element': key, 'frequency': val}
-                for key, val in normalized_frequencies.iteritems()
+                for key, val in normalized_frequencies.items()
             ]
         },
     })
