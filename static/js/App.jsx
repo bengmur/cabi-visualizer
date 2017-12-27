@@ -12,12 +12,8 @@ export default class App extends React.Component {
         super(props);
 
         this.state = {
-            isLoading: false,
-            loadingStates: [],
             showMap: false
         };
-
-        this.trips = [];
 
         this.handleInputChange = this.handleInputChange.bind(this);
         this.handleLoginFormSubmit = this.handleLoginFormSubmit.bind(this);
@@ -27,24 +23,40 @@ export default class App extends React.Component {
         this.setState({[e.target.name]: e.target.value});
     }
 
-    handleLoginFormSubmit(e) {
-        this.setState({isLoadingData: true});
+    resetLoadingStates() {
+        this.setState({loadingStates: []});
+    }
+
+    addLoadingState(loadingState) {
         this.setState(prevState => ({
             loadingStates: [
                 ...prevState.loadingStates,
-                'Scraping your Capital Bikeshare trip data'
+                loadingState
             ]
         }));
+    }
+
+    updateLoadingState(loadingState) {
+        this.setState(prevState => {
+            let loadingStates = prevState.loadingStates;
+            loadingStates.pop();
+            loadingStates.push(loadingState);
+            return {loadingStates: loadingStates};
+        });
+    }
+
+    handleLoginFormSubmit(e) {
+        this.trips = [];
+        this.setState({
+            isLoadingData: true
+        });
+        this.resetLoadingStates();
+        this.addLoadingState('Scraping your Capital Bikeshare trip data');
         axios.post('/api/locations', {
             username: this.state.username,
             password: this.state.password,
         }).then((response) => {
-            this.setState(prevState => ({
-                loadingStates: [
-                    ...prevState.loadingStates,
-                    'Calculating normalized frequencies of unique trips'
-                ]
-            }));
+            this.addLoadingState('Calculating normalized frequencies of unique trips');
             const locationPairs = response.data.data.location_pairs;
             return axios.post('/api/calculate-normalized-frequencies', {
                 elements: locationPairs,
@@ -52,12 +64,7 @@ export default class App extends React.Component {
         }).then((response) => {
             const normalizedLocationFrequencies = response.data.data.normalized_frequencies;
             this.setState({uniqueTripCount: normalizedLocationFrequencies.length});
-            this.setState(prevState => ({
-                loadingStates: [
-                    ...prevState.loadingStates,
-                    `Generating trip polylines (0 of ${this.state.uniqueTripCount})`
-                ]
-            }));
+            this.addLoadingState(`Generating trip polylines (0 of ${this.state.uniqueTripCount})`);
             for (let locationData of normalizedLocationFrequencies) {
                 axios.post('/api/maps/routing-polyline', {
                     start: locationData.element[0],
@@ -68,20 +75,12 @@ export default class App extends React.Component {
                         path: response.data.data.polyline,
                         weight: locationData.frequency,
                     });
-                    this.setState(prevState => {
-                        let loadingStates = prevState.loadingStates;
-                        loadingStates.pop();
-                        loadingStates.push(`Generating trip polylines (${this.trips.length} of ${this.state.uniqueTripCount})`);
-                        return {loadingStates: loadingStates};
-                    });
+                    this.updateLoadingState(
+                        `Generating trip polylines (${this.trips.length} of ${this.state.uniqueTripCount})`
+                    );
 
                     if (this.trips.length === this.state.uniqueTripCount) {
-                        this.setState(prevState => ({
-                            loadingStates: [
-                                ...prevState.loadingStates,
-                                'Fetching Google Maps API key'
-                            ]
-                        }));
+                        this.addLoadingState('Fetching Google Maps API key');
                         axios.get('/api/maps/api-key').then((response) => {
                             this.setState({
                                 googleMapsApiKey: response.data.data.maps_api_key,
