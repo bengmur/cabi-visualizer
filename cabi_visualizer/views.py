@@ -88,7 +88,16 @@ def calculate_normalized_frequencies():
     })
 
 
-@views.route('/api/routing-polyline', methods=['POST'])
+@views.route('/api/maps/api-key', methods=['GET'])
+def maps_api_key():
+    return jsonify({
+        'data': {
+            'maps_api_key': current_app.config['GOOGLE_API_KEY'],
+        }
+    })
+
+
+@views.route('/api/maps/routing-polyline', methods=['POST'])
 def routing_polyline():
     request_data = request.get_json(force=True)
     _require_request_params(request_data, ['start', 'end'])

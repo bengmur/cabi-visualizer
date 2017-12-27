@@ -63,7 +63,7 @@ export default class PolylineHeatMap extends React.Component {
 
         return (
             <Map
-                googleMapURL="https://maps.googleapis.com/maps/api/js?v=3.exp&libraries=drawing"
+                googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${this.props.apiKey}&v=3.exp&libraries=drawing`}
                 loadingElement={wrapper}
                 containerElement={wrapper}
                 mapElement={wrapper}

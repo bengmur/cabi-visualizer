@@ -14,7 +14,7 @@ export default class App extends React.Component {
         this.state = {
             isLoading: false,
             loadingStates: [],
-            tripsLoaded: false
+            showMap: false
         };
 
         this.trips = [];
@@ -59,7 +59,7 @@ export default class App extends React.Component {
                 ]
             }));
             for (let locationData of normalizedLocationFrequencies) {
-                axios.post('/api/routing-polyline', {
+                axios.post('/api/maps/routing-polyline', {
                     start: locationData.element[0],
                     end: locationData.element[1],
                     mode: 'bicycling'
@@ -76,7 +76,18 @@ export default class App extends React.Component {
                     });
 
                     if (this.trips.length === this.state.uniqueTripCount) {
-                        this.setState({tripsLoaded: true});
+                        this.setState(prevState => ({
+                            loadingStates: [
+                                ...prevState.loadingStates,
+                                'Fetching Google Maps API key'
+                            ]
+                        }));
+                        axios.get('/api/maps/api-key').then((response) => {
+                            this.setState({
+                                googleMapsApiKey: response.data.data.maps_api_key,
+                                showMap: true
+                            });
+                        });
                     }
                 });
             }
@@ -94,9 +105,9 @@ export default class App extends React.Component {
                 </Row>
                 <Row>
                     <Col xs={12}>
-                        {this.state.tripsLoaded ? [
+                        {this.state.showMap ? [
                              <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.uniqueTripCount} />,
-                             <PolylineHeatMap key="1" weightedPolylines={this.trips} />
+                             <PolylineHeatMap key="1" apiKey={this.state.googleMapsApiKey} weightedPolylines={this.trips} />
                         ] : [
                              this.state.isLoadingData && <StatusWell key="0" statuses={this.state.loadingStates} />,
                              <LoginForm

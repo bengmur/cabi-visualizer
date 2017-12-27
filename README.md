@@ -17,7 +17,7 @@ npm run dev
 cp config.example.py config.py
 ```
 
-Edit config.py and replace `YOUR_API_KEY_HERE` with your Google API Key that has the [Directions API](https://developers.google.com/maps/documentation/directions/) enabled.
+Edit config.py and replace `YOUR_API_KEY_HERE` with your Google API Key that has the [Directions](https://developers.google.com/maps/documentation/directions/) and [Maps JavaScript](https://developers.google.com/maps/documentation/javascript/) APIs enabled.
 
 ```
 virtualenv venv -p python2.7
