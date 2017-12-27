@@ -1,9 +1,11 @@
 import axios from "axios";
 import React from "react";
-import { PageHeader, Well, Grid, Row, Col } from "react-bootstrap";
+import { PageHeader, Grid, Row, Col } from "react-bootstrap";
 
+import HeatMapScaleBar from "./HeatMapScaleBar";
 import PolylineHeatMap from "./PolylineHeatMap";
 import LoginForm from "./LoginForm";
+import StatusWell from "./StatusWell";
 
 export default class App extends React.Component {
     constructor(props) {
@@ -49,11 +51,11 @@ export default class App extends React.Component {
             });
         }).then((response) => {
             const normalizedLocationFrequencies = response.data.data.normalized_frequencies;
-            this.uniqueTripCount = normalizedLocationFrequencies.length;
+            this.setState({uniqueTripCount: normalizedLocationFrequencies.length});
             this.setState(prevState => ({
                 loadingStates: [
                     ...prevState.loadingStates,
-                    `Generating trip polylines (0 of ${this.uniqueTripCount})`
+                    `Generating trip polylines (0 of ${this.state.uniqueTripCount})`
                 ]
             }));
             for (let locationData of normalizedLocationFrequencies) {
@@ -69,11 +71,11 @@ export default class App extends React.Component {
                     this.setState(prevState => {
                         let loadingStates = prevState.loadingStates;
                         loadingStates.pop();
-                        loadingStates.push(`Generating trip polylines (${this.trips.length} of ${this.uniqueTripCount})`);
+                        loadingStates.push(`Generating trip polylines (${this.trips.length} of ${this.state.uniqueTripCount})`);
                         return {loadingStates: loadingStates};
                     });
 
-                    if (this.trips.length === this.uniqueTripCount) {
+                    if (this.trips.length === this.state.uniqueTripCount) {
                         this.setState({tripsLoaded: true});
                     }
                 });
@@ -92,18 +94,13 @@ export default class App extends React.Component {
                 </Row>
                 <Row>
                     <Col xs={12}>
-                        {this.state.tripsLoaded ? (
-                             <PolylineHeatMap weightedPolylines={this.trips} />
-                        ) : [
-                             this.state.isLoadingData && (
-                                 <Well key="well">
-                                     {this.state.loadingStates.map((loadingState) => (
-                                         <p key={loadingState}>{loadingState}</p>
-                                     ))}
-                                 </Well>
-                             ),
+                        {this.state.tripsLoaded ? [
+                             <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.uniqueTripCount} />,
+                             <PolylineHeatMap key="1" weightedPolylines={this.trips} />
+                        ] : [
+                             this.state.isLoadingData && <StatusWell key="0" statuses={this.state.loadingStates} />,
                              <LoginForm
-                                 key="form"
+                                 key="1"
                                  handleInputChange={this.handleInputChange}
                                  handleLoginFormSubmit={this.handleLoginFormSubmit}
                                  isLoading={this.state.isLoadingData}
