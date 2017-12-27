@@ -8,6 +8,7 @@ from urllib2 import HTTPError
 from bs4 import BeautifulSoup
 from dateutil.parser import parse
 import mechanize
+import requests
 
 
 class LoginException(Exception):
@@ -29,11 +30,6 @@ class CaBiUser(object):
 
 
 class CaBiScraper(object):
-    """Capital Bikeshare provides no easy way access user data through an API,
-    as it does for overall system data. To get around this, we can scrape it
-    manually from the user's trip page. Taking into consideration the login
-    form with CSRF protection, as well as route paths relying on a distinct
-    member ID, the easiest way to do this is with a stateful web browser."""
 
     def __init__(self, username, password):
         self.cabi_user = CaBiUser(username, password)
@@ -122,6 +118,13 @@ class CaBiScraper(object):
         return trips
 
     def get_all_trips_data(self):
+        """Capital Bikeshare provides no easy way access user data through an
+        API, as they do for overall system data. To get around this, we can
+        scrape it manually from the member's trip page. Considering the login
+        form with CSRF protection, as well as URI route paths relying on a
+        distinct member ID, the easiest way to do this is with a stateful web
+        browser."""
+
         self._authenticate()
         self._init_user_data()
 
@@ -138,3 +141,10 @@ class CaBiScraper(object):
             trips.extend(self._get_trips_data(start, end))
 
         return trips
+
+    def get_station_info(self):
+        response = requests.get(
+            'https://gbfs.capitalbikeshare.com/gbfs/en/station_information.json'
+        )
+        station_info = response.json()['data']['stations']
+        return station_info

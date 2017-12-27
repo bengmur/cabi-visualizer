@@ -3,8 +3,6 @@ from abc import (
     abstractmethod,
 )
 
-import requests
-
 from cabi_visualizer.lib.scraper import (
     CaBiScraper,
 )
@@ -29,26 +27,28 @@ class Locations(object):
 class CaBiLocations(Locations):
 
     def __init__(self, username, password):
-        self.username = username
-        self.password = password
+        self.scraper = CaBiScraper(username, password)
 
-        # Get station metadata for lat/lng lookups from station name
-        response = requests.get('https://gbfs.capitalbikeshare.com/gbfs/en/station_information.json')
-        station_data = response.json()['data']['stations']
-        self.station_latlngs = {
+    @staticmethod
+    def _map_station_names_to_lat_lngs(station_data):
+        station_lat_lngs = {
             st['name'].strip(): (
                 '{}, {}'.format(st['lat'], st['lon'])
             ) for st in station_data
         }
+        return station_lat_lngs
 
     def get_locations(self):
-        scraper = CaBiScraper(self.username, self.password)
-        trips = scraper.get_all_trips_data()
+        trips = self.scraper.get_all_trips_data()
+
+        # Get station metadata for lat/lng lookups from station name
+        station_info = self.scraper.get_station_info()
+        station_lat_lngs = self._map_station_names_to_lat_lngs(station_info)
 
         locations = [
             (
-                self.station_latlngs[trip['start_station']],
-                self.station_latlngs[trip['end_station']],
+                station_lat_lngs[trip['start_station']],
+                station_lat_lngs[trip['end_station']],
             ) for trip in trips
         ]
 
