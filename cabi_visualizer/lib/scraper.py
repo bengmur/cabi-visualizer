@@ -120,7 +120,20 @@ class CaBiScraper(object):
         scrape it manually from the member's trip page. Considering the login
         form with CSRF protection, as well as URI route paths relying on a
         distinct member ID, the easiest way to do this is with a stateful web
-        browser."""
+        browser.
+
+        Returns a list of format:
+        [
+            {
+                'start_date': string,
+                'end_date': string,
+                'start_station': string,
+                'end_station': string,
+                'duration': string,
+            },
+            ...
+        ]
+        """
 
         self._authenticate()
         self._init_user_data()
