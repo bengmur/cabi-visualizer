@@ -12,6 +12,11 @@ const Map = withScriptjs(withGoogleMap((props) => (
 )));
 
 export default class PolylineHeatMap extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {polylines: props.weightedPolylines};
+    }
+
     getHeatMapColorHex(weight) {
         /* 0 <= weight <= 1 */
 
@@ -64,11 +69,14 @@ export default class PolylineHeatMap extends React.Component {
                 containerElement={wrapper}
                 mapElement={wrapper}
             >
-                {this.props.weightedPolylines.map((weightedPolyline) => (
+                {this.state.polylines.map((polyline) => (
                     <Polyline
-                        key={weightedPolyline.path}
-                        path={this.getLatLngsFromEncodedPath(weightedPolyline.path)}
-                        options={{strokeColor: this.getHeatMapColorHex(weightedPolyline.weight), zIndex: weightedPolyline.weight}}
+                        key={polyline.path}
+                        path={this.getLatLngsFromEncodedPath(polyline.path)}
+                        options={{
+                            strokeColor: this.getHeatMapColorHex(polyline.weight),
+                            zIndex: polyline.weight
+                        }}
                     />
                 ))}
             </Map>
