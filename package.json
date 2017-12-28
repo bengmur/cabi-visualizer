@@ -24,7 +24,7 @@
     "url": "https://github.com/bengmur/cabi-visualizer/issues"
   },
   "homepage": "https://github.com/bengmur/cabi-visualizer#readme",
-  "devDependencies": {
+  "dependencies": {
     "axios": "^0.17.1",
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
