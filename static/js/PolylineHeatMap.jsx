@@ -1,4 +1,4 @@
-import PolylineLib from "polyline";
+import PolylineLib from "@mapbox/polyline";
 import React from "react";
 import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from "react-google-maps";
 
