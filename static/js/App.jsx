@@ -38,7 +38,7 @@ export default class App extends React.Component {
 
     updateLoadingState(loadingState) {
         this.setState(prevState => {
-            let loadingStates = prevState.loadingStates;
+            let loadingStates = prevState.loadingStates.slice();
             loadingStates.pop();
             loadingStates.push(loadingState);
             return {loadingStates: loadingStates};
