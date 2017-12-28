@@ -58,6 +58,17 @@ export default class PolylineHeatMap extends React.Component {
         return latLngs;
     }
 
+    updatePolylineState(path, opts) {
+        this.setState(prevState => (
+            prevState.polylines.map((polyline) => {
+                if (polyline.path == path) {
+                    Object.assign(polyline, opts);
+                }
+                return polyline;
+            })
+        ));
+    }
+
     render() {
         const wrapper = <div style={{ height: `100%` }} />;
         return (
@@ -74,9 +85,11 @@ export default class PolylineHeatMap extends React.Component {
                         key={polyline.path}
                         path={this.getLatLngsFromEncodedPath(polyline.path)}
                         options={{
-                            strokeColor: this.getHeatMapColorHex(polyline.weight),
-                            zIndex: polyline.weight
+                            strokeColor: polyline.isHovering ? '#0088FF' : this.getHeatMapColorHex(polyline.weight),
+                            zIndex: polyline.isHovering ? '2' : polyline.weight
                         }}
+                        onMouseOver={() => this.updatePolylineState(polyline.path, {isHovering: true})}
+                        onMouseOut={() => this.updatePolylineState(polyline.path, {isHovering: false})}
                     />
                 ))}
             </Map>
