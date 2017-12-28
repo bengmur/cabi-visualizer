@@ -2,6 +2,15 @@ import PolylineLib from "@mapbox/polyline";
 import React from "react";
 import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from "react-google-maps";
 
+const Map = withScriptjs(withGoogleMap((props) => (
+    <GoogleMap
+        defaultCenter={props.defaultCenter}
+        defaultZoom={props.defaultZoom}
+    >
+        {props.children}
+    </GoogleMap>
+)));
+
 export default class PolylineHeatMap extends React.Component {
     getHeatMapColorHex(weight) {
         /* 0 <= weight <= 1 */
@@ -45,10 +54,15 @@ export default class PolylineHeatMap extends React.Component {
     }
 
     render() {
-        const Map = withScriptjs(withGoogleMap((props) =>
-            <GoogleMap
+        const wrapper = <div style={{ height: `100%` }} />;
+        return (
+            <Map
+                googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${this.props.apiKey}&v=3.exp&libraries=drawing`}
                 defaultZoom={13}
                 defaultCenter={{ lat: 38.898, lng: -77.035 }}
+                loadingElement={wrapper}
+                containerElement={wrapper}
+                mapElement={wrapper}
             >
                 {this.props.weightedPolylines.map((weightedPolyline) => (
                     <Polyline
@@ -57,17 +71,7 @@ export default class PolylineHeatMap extends React.Component {
                         options={{strokeColor: this.getHeatMapColorHex(weightedPolyline.weight), zIndex: weightedPolyline.weight}}
                     />
                 ))}
-            </GoogleMap>
-        ));
-        const wrapper = <div style={{ height: `100%` }} />;
-
-        return (
-            <Map
-                googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${this.props.apiKey}&v=3.exp&libraries=drawing`}
-                loadingElement={wrapper}
-                containerElement={wrapper}
-                mapElement={wrapper}
-            />
+            </Map>
         );
     }
 }
