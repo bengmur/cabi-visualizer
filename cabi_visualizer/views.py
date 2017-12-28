@@ -63,20 +63,16 @@ def calculate_normalized_frequencies():
 
     elements = request_data['elements']
     if not elements:
-        return jsonify({
-            'data': {
-                'normalized_frequencies': [],
-            },
-        })
+        normalized_frequencies = {}
+    else:
+        frequencies = determine_frequencies(elements)
 
-    frequencies = determine_frequencies(elements)
-
-    # Normalize with respect to a 0 frequency
-    max_ = max(frequencies.values())
-    normalized_frequencies = {
-        key: normalize_value(val, 0, max_)
-        for key, val in frequencies.items()
-    }
+        # Normalize with respect to a 0 frequency
+        max_ = max(frequencies.values())
+        normalized_frequencies = {
+            key: normalize_value(val, 0, max_)
+            for key, val in frequencies.items()
+        }
 
     return jsonify({
         'data': {
