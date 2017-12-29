@@ -95,8 +95,8 @@ class CaBiScraper(object):
         raw_trips = page.find_all(class_='ed-table__item_trip')
 
         dom_class_translation = {
-            'ed-table__item__info_trip-start-date': 'start_date',
-            'ed-table__item__info_trip-end-date': 'end_date',
+            'ed-table__item__info_trip-start-date': 'start_datetime',
+            'ed-table__item__info_trip-end-date': 'end_datetime',
             'ed-table__item__info_trip-start-station': 'start_station',
             'ed-table__item__info_trip-end-station': 'end_station',
             'ed-table__item__info_trip-duration': 'duration',
@@ -109,6 +109,11 @@ class CaBiScraper(object):
                 prop_data = raw_trip.find(class_=class_)
                 prop_data = prop_data.find(text=True, recursive=False)
                 prop_data = str(prop_data).strip()
+
+                # Convert datetime into ISO 8601 format
+                if 'datetime' in prop_key:
+                    prop_data = parse(prop_data).isoformat()
+
                 trip[prop_key] = prop_data
             trips.append(trip)
 
@@ -125,8 +130,8 @@ class CaBiScraper(object):
         Returns a list of format:
         [
             {
-                'start_date': string,
-                'end_date': string,
+                'start_datetime': string,
+                'end_datetime': string,
                 'start_station': string,
                 'end_station': string,
                 'duration': string,
