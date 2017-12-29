@@ -10,12 +10,12 @@ from cabi_visualizer.lib.scraper import (
     ScraperException,
 )
 from cabi_visualizer.lib.utils import require_request_params
-from cabi_visualizer.routes.models import CaBiRoutes
+from cabi_visualizer.location_routes.models import CaBiRoutes
 
-routes_views = Blueprint('route_views', __name__)
+location_routes_views = Blueprint('location_routes_views', __name__)
 
 
-@routes_views.route('/all', methods=['POST'])
+@location_routes_views.route('/all', methods=['POST'])
 def routes_all():
     request_data = request.get_json(force=True)
     require_request_params(request_data, ['username', 'password'])
@@ -38,7 +38,7 @@ def routes_all():
     })
 
 
-@routes_views.route('/stats', methods=['POST'])
+@location_routes_views.route('/stats', methods=['POST'])
 def routes_stats():
     request_data = request.get_json(force=True)
     require_request_params(request_data, ['username', 'password'])

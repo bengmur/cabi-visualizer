@@ -4,7 +4,7 @@ from flask import (
 )
 
 from cabi_visualizer.maps.views import maps_views
-from cabi_visualizer.routes.views import routes_views
+from cabi_visualizer.location_routes.views import location_routes_views
 
 app = Flask(
     __name__,
@@ -15,7 +15,7 @@ app = Flask(
 app.config.from_object('config')
 
 app.register_blueprint(maps_views, url_prefix='/api/maps')
-app.register_blueprint(routes_views, url_prefix='/api/routes')
+app.register_blueprint(location_routes_views, url_prefix='/api/routes')
 
 
 @app.route('/')
