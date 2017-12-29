@@ -14,7 +14,7 @@ const Map = withScriptjs(withGoogleMap((props) => (
 export default class PolylineHeatMap extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {polylines: props.weightedPolylines};
+        this.state = {polylines: props.polylines};
     }
 
     getHeatMapColorHex(weight) {
@@ -50,14 +50,6 @@ export default class PolylineHeatMap extends React.Component {
         return hexColor;
     }
 
-    getLatLngsFromEncodedPath(encodedPath) {
-        const decodedPath = PolylineLib.decode(encodedPath);
-        const latLngs = decodedPath.map((rawLatLng) => (
-            { lat: rawLatLng[0], lng: rawLatLng[1] }
-        ));
-        return latLngs;
-    }
-
     updatePolylineState(path, opts) {
         this.setState(prevState => (
             prevState.polylines.map((polyline) => {
@@ -80,14 +72,14 @@ export default class PolylineHeatMap extends React.Component {
                 containerElement={wrapper}
                 mapElement={wrapper}
             >
-                {this.state.polylines.map((polyline) => (
+                {this.state.polylines.map((polyline, i) => (
                     <Polyline
                         key={polyline.path}
-                        path={this.getLatLngsFromEncodedPath(polyline.path)}
+                        path={PolylineLib.decode(polyline.path).map((rawLatLng) => ({lat: rawLatLng[0], lng: rawLatLng[1]}))}
                         options={{
-                            strokeColor: polyline.isHovering ? '#0088FF' : this.getHeatMapColorHex(polyline.weight),
+                            strokeColor: polyline.isHovering ? '#0088FF' : this.getHeatMapColorHex(polyline[this.props.weightKey]),
                             strokeWeight: 6,
-                            zIndex: polyline.isHovering ? 2 : polyline.weight
+                            zIndex: polyline.isHovering ? 2 : polyline[this.props.weightKey]
                         }}
                         onMouseOver={() => this.updatePolylineState(polyline.path, {isHovering: true})}
                         onMouseOut={() => this.updatePolylineState(polyline.path, {isHovering: false})}

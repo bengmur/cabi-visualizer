@@ -46,11 +46,11 @@ export default class App extends React.Component {
     }
 
     handleLoginFormSubmit(e) {
-        this.trips = [];
+        this.routes = [];
         this.setState({isLoadingData: true});
         this.resetLoadingStates();
-        this.addLoadingState('Scraping your Capital Bikeshare trip data');
-        axios.post('/api/locations', {
+        this.addLoadingState('Scraping and analyzing your Capital Bikeshare trip data');
+        axios.post('/api/routes/stats', {
             username: this.state.username,
             password: this.state.password,
         }).catch((error) => {
@@ -61,27 +61,24 @@ export default class App extends React.Component {
             }
             return Promise.reject(error);
         }).then((response) => {
-            this.addLoadingState('Calculating normalized frequencies of unique trips');
-            const locationPairs = response.data.data.location_pairs;
-            return axios.post('/api/calculate-normalized-frequencies', {
-                elements: locationPairs,
+            const routes = response.data.data.route_stats;
+            this.uniqueRoutes = routes.length;
+            this.setState({
+                upperBound: Math.max(...routes.map(route => route.total_frequency))
             });
-        }).then((response) => {
-            const normalizedLocationFrequencies = response.data.data.normalized_frequencies;
-            this.setState({uniqueTripCount: normalizedLocationFrequencies.length});
-            this.addLoadingState(`Generating trip polylines (0 of ${this.state.uniqueTripCount})`);
-            return Promise.all(normalizedLocationFrequencies.map((locationData) => (
-                axios.post('/api/maps/routing-polyline', {
-                    start: locationData.element[0],
-                    end: locationData.element[1],
+            this.addLoadingState(`Generating route polylines (0 of ${this.uniqueRoutes})`);
+            return Promise.all(routes.map((route) => (
+                axios.post('/api/maps/polyline', {
+                    start: `${route.waypoints[0].latitude}, ${route.waypoints[0].longitude}`,
+                    end: `${route.waypoints[route.waypoints.length - 1].latitude}, ${route.waypoints[route.waypoints.length - 1].longitude}`,
                     mode: 'bicycling'
                 }).then((response) => {
-                    this.trips.push({
+                    this.routes.push({
+                        ...route,
                         path: response.data.data.polyline,
-                        weight: locationData.frequency,
                     });
                     this.updateLoadingState(
-                        `Generating trip polylines (${this.trips.length} of ${this.state.uniqueTripCount})`
+                        `Generating route polylines (${this.routes.length} of ${this.uniqueRoutes})`
                     );
                 })
             )));
@@ -97,6 +94,7 @@ export default class App extends React.Component {
             if (error.message !== 'auth') {
                 this.addLoadingState('Uh oh, something went wrong');
                 this.setState({isLoadingData: false});
+                console.error(error);
             }
         });
 
@@ -114,8 +112,8 @@ export default class App extends React.Component {
                 <Row>
                     <Col xs={12}>
                         {this.state.showMap ? [
-                             <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.uniqueTripCount} />,
-                             <PolylineHeatMap key="1" apiKey={this.state.googleMapsApiKey} weightedPolylines={this.trips} />
+                             <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.upperBound} />,
+                             <PolylineHeatMap key="1" apiKey={this.state.googleMapsApiKey} polylines={this.routes} weightKey="normalized_frequency" />
                         ] : [
                              this.state.loadingStates && <StatusWell key="0" statuses={this.state.loadingStates} />,
                              <LoginForm
