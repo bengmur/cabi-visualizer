@@ -1,6 +1,7 @@
 import PolylineLib from "@mapbox/polyline";
 import React from "react";
 import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from "react-google-maps";
+import InfoBox from "react-google-maps/lib/components/addons/InfoBox";
 
 const Map = withScriptjs(withGoogleMap((props) => (
     <GoogleMap
@@ -14,7 +15,10 @@ const Map = withScriptjs(withGoogleMap((props) => (
 export default class PolylineHeatMap extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {polylines: props.polylines};
+        this.state = {
+            polylines: props.polylines,
+            infoBox: {}
+        };
     }
 
     getHeatMapColorHex(weight) {
@@ -52,26 +56,53 @@ export default class PolylineHeatMap extends React.Component {
 
     updatePolylineState(path, opts) {
         this.setState(prevState => (
-            prevState.polylines.map((polyline) => {
-                if (polyline.path == path) {
-                    Object.assign(polyline, opts);
-                }
-                return polyline;
-            })
+            {
+                polylines: prevState.polylines.map((polyline) => {
+                    if (polyline.path == path) {
+                        return {...polyline, ...opts};
+                    }
+                    return polyline;
+                })
+            }
         ));
     }
 
+    handlePolylineMouseOver(e, polyline) {
+        this.updatePolylineState(polyline.path, {isHovering: true});
+        this.setState({infoBox: {isVisible: true, position: e.latLng, activePolyline: polyline}});
+    }
+
+    handlePolylineMouseMove(e, polyline) {
+        this.setState(prevState => ({infoBox: {...prevState.infoBox, position: e.latLng}}));
+    }
+
+    handlePolylineMouseOut(e, polyline) {
+        this.updatePolylineState(polyline.path, {isHovering: false});
+        this.setState({infoBox: {isVisible: false}});
+    }
+
     render() {
-        const wrapper = <div style={{ height: `100%` }} />;
+        const wrapper = <div style={{height: '100%'}} />;
         return (
             <Map
                 googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${this.props.apiKey}&v=3.exp&libraries=drawing`}
                 defaultZoom={13}
-                defaultCenter={{ lat: 38.898, lng: -77.035 }}
+                defaultCenter={{lat: 38.898, lng: -77.035}}
                 loadingElement={wrapper}
                 containerElement={wrapper}
                 mapElement={wrapper}
             >
+                {this.state.infoBox.isVisible && (
+                    <InfoBox position={this.state.infoBox.position} options={{closeBoxURL: ''}}>
+                        <div style={{backgroundColor: '#FFF', padding: '10px', borderRadius: '0 10px 10px 10px'}}>
+                            <div style={{userSelect: 'none'}}>
+                                <p>From: {this.state.infoBox.activePolyline.waypoints[0].name}</p>
+                                <p>To: {this.state.infoBox.activePolyline.waypoints[this.state.infoBox.activePolyline.waypoints.length - 1].name}</p>
+                                <p style={{marginBottom: 0}}>Total Trips: {this.state.infoBox.activePolyline.total_frequency}</p>
+                            </div>
+                        </div>
+                    </InfoBox>
+                )}
                 {this.state.polylines.map((polyline, i) => (
                     <Polyline
                         key={polyline.path}
@@ -81,8 +112,9 @@ export default class PolylineHeatMap extends React.Component {
                             strokeWeight: 6,
                             zIndex: polyline.isHovering ? 2 : polyline[this.props.weightKey]
                         }}
-                        onMouseOver={() => this.updatePolylineState(polyline.path, {isHovering: true})}
-                        onMouseOut={() => this.updatePolylineState(polyline.path, {isHovering: false})}
+                        onMouseOver={e => this.handlePolylineMouseOver(e, polyline)}
+                        onMouseMove={e => this.handlePolylineMouseMove(e, polyline)}
+                        onMouseOut={e => this.handlePolylineMouseOut(e, polyline)}
                     />
                 ))}
             </Map>
