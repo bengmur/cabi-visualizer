@@ -86,7 +86,8 @@ export default class PolylineHeatMap extends React.Component {
                         path={this.getLatLngsFromEncodedPath(polyline.path)}
                         options={{
                             strokeColor: polyline.isHovering ? '#0088FF' : this.getHeatMapColorHex(polyline.weight),
-                            zIndex: polyline.isHovering ? '2' : polyline.weight
+                            strokeWeight: 6,
+                            zIndex: polyline.isHovering ? 2 : polyline.weight
                         }}
                         onMouseOver={() => this.updatePolylineState(polyline.path, {isHovering: true})}
                         onMouseOut={() => this.updatePolylineState(polyline.path, {isHovering: false})}
