@@ -99,7 +99,7 @@ class CaBiScraper(object):
             'ed-table__item__info_trip-end-date': 'end_datetime',
             'ed-table__item__info_trip-start-station': 'start_station',
             'ed-table__item__info_trip-end-station': 'end_station',
-            'ed-table__item__info_trip-duration': 'duration',
+            'ed-table__item__info_trip-duration': 'duration_seconds',
         }
 
         trips = []
@@ -113,6 +113,16 @@ class CaBiScraper(object):
                 # Convert datetime into ISO 8601 format
                 if 'datetime' in prop_key:
                     prop_data = parse(prop_data).isoformat()
+
+                # Convert duration to seconds
+                if 'duration' in prop_key:
+                    prop_data = parse(prop_data)
+                    prop_data = timedelta(
+                        hours=prop_data.hour,
+                        minutes=prop_data.minute,
+                        seconds=prop_data.second,
+                    )
+                    prop_data = prop_data.seconds
 
                 trip[prop_key] = prop_data
             trips.append(trip)
@@ -134,7 +144,7 @@ class CaBiScraper(object):
                 'end_datetime': string,
                 'start_station': string,
                 'end_station': string,
-                'duration': string,
+                'duration_seconds': int,
             },
             ...
         ]

@@ -5,6 +5,7 @@ import { PageHeader, Grid, Row, Col } from "react-bootstrap";
 import HeatMapScaleBar from "./HeatMapScaleBar";
 import PolylineHeatMap from "./PolylineHeatMap";
 import LoginForm from "./LoginForm";
+import RadioBar from "./RadioBar";
 import StatusWell from "./StatusWell";
 
 export default class App extends React.Component {
@@ -12,7 +13,8 @@ export default class App extends React.Component {
         super(props);
 
         this.state = {
-            showMap: false
+            showMap: false,
+            statisticType: 'normalized_frequency'
         };
 
         this.handleInputChange = this.handleInputChange.bind(this);
@@ -63,9 +65,6 @@ export default class App extends React.Component {
         }).then((response) => {
             const routes = response.data.data.route_stats;
             this.uniqueRoutes = routes.length;
-            this.setState({
-                upperBound: Math.max(...routes.map(route => route.total_frequency))
-            });
             this.addLoadingState(`Generating route polylines (0 of ${this.uniqueRoutes})`);
             return Promise.all(routes.map((route) => (
                 axios.post('/api/maps/polyline', {
@@ -112,8 +111,20 @@ export default class App extends React.Component {
                 <Row>
                     <Col xs={12}>
                         {this.state.showMap ? [
-                             <HeatMapScaleBar key="0" lowerBound={1} upperBound={this.state.upperBound} />,
-                             <PolylineHeatMap key="1" apiKey={this.state.googleMapsApiKey} polylines={this.routes} weightKey="normalized_frequency" />
+                             <RadioBar
+                                 key="0"
+                                 name="statisticType"
+                                 checkedValue={this.state.statisticType}
+                                 availableInputs={[
+                                     {label: 'Trip Frequency', value: 'normalized_frequency'},
+                                     {label: 'Average Time Traveled', value: 'normalized_avg_duration'},
+                                     {label: 'Total Time Traveled', value: 'normalized_total_duration'}
+                                 ]}
+                                 selectHandler={this.handleInputChange} />,
+                             <HeatMapScaleBar key="1"
+                                              lowerBound={Math.min(...routes.map(route => route[this.state.statisticType]))}
+                                              upperBound={Math.max(...routes.map(route => route[this.state.statisticType]))} />,
+                             <PolylineHeatMap key="2" apiKey={this.state.googleMapsApiKey} polylines={this.routes} weightKey={this.state.statisticType} />
                         ] : [
                              this.state.loadingStates && <StatusWell key="0" statuses={this.state.loadingStates} />,
                              <LoginForm
