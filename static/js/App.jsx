@@ -28,11 +28,12 @@ export default class App extends React.Component {
             console.error(error);
         });
 
-        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleLoginFormInputChange = this.handleLoginFormInputChange.bind(this);
         this.handleLoginFormSubmit = this.handleLoginFormSubmit.bind(this);
+        this.handleStatisticTypeChange = this.handleStatisticTypeChange.bind(this);
     }
 
-    handleInputChange(e) {
+    handleLoginFormInputChange(e) {
         this.setState({[e.target.name]: e.target.value});
     }
 
@@ -72,10 +73,11 @@ export default class App extends React.Component {
                 })
             )));
         }).then(() => {
-            this.setState({
+            this.setState(prevState => ({
+                ...this.getStatistics(prevState.statisticType),
                 isLoadingData: false,
                 loadedSuccessfully: true
-            });
+            }));
         }).catch((error) => {
             if (error.message !== 'auth') {
                 this.setState({
@@ -88,6 +90,28 @@ export default class App extends React.Component {
         });
 
         e.preventDefault();
+    }
+
+    getStatistics(statisticType) {
+        const lowerBoundRoute = this.state.routes.find(
+            route => route.statistics[statisticType].normalized_value === 0
+        );
+        const upperBoundRoute = this.state.routes.find(
+            route => route.statistics[statisticType].normalized_value === 1
+        );
+
+        return {
+            statisticLowerBound: lowerBoundRoute.statistics[statisticType].value,
+            statisticUpperBound: upperBoundRoute.statistics[statisticType].value
+        };
+    }
+
+    handleStatisticTypeChange(e) {
+        const statisticType = e.target.value;
+        this.setState({
+            ...this.getStatistics(statisticType),
+            statisticType: statisticType
+        });
     }
 
     render() {
@@ -114,7 +138,7 @@ export default class App extends React.Component {
                             <LoginForm
                                 defaultUsername={this.state.username}
                                 defaultPassword={this.state.password}
-                                handleInputChange={this.handleInputChange}
+                                handleInputChange={this.handleLoginFormInputChange}
                                 handleLoginFormSubmit={this.handleLoginFormSubmit}
                                 isLoading={this.state.isLoadingData}
                                 submitText="Visualize Trips" />
@@ -125,7 +149,7 @@ export default class App extends React.Component {
                     )}
                     {showLoadingStatus && (
                         <div className={css(styles.flexCenter)}>
-                            <Spinner className={css(styles.marginRight)} />
+                            <Spinner />
                             <span className={css(styles.loadingText)}>{this.state.loadingStatus}</span>
                         </div>
                     )}
@@ -140,18 +164,11 @@ export default class App extends React.Component {
                                     {label: 'Average Time Traveled', value: 'average_duration'},
                                     {label: 'Total Time Traveled', value: 'total_duration'}
                                 ]}
-                                selectHandler={this.handleInputChange} />
+                                selectHandler={this.handleStatisticTypeChange} />
                             <HeatMapScaleBar key="1"
-                                lowerBound={
-                                    Math.min(...this.state.routes.map(
-                                        route => route.statistics[this.state.statisticType].value
-                                    ))
-                                }
-                                upperBound={
-                                    Math.max(...this.state.routes.map(
-                                        route => route.statistics[this.state.statisticType].value
-                                    ))
-                                } />
+                                lowerBound={this.state.statisticLowerBound}
+                                upperBound={this.state.statisticUpperBound}
+                            />
                         </div>
                     )}
                 </div>
