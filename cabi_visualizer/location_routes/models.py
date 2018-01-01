@@ -7,7 +7,6 @@ from collections import Counter, defaultdict
 from cabi_visualizer.lib.scraper import (
     CaBiScraper,
 )
-from cabi_visualizer.lib.stats import normalize_value
 
 
 class Waypoint(object):
@@ -43,10 +42,10 @@ class Route(object):
     """A route consists of a list of waypoints which comprise its path,
     a duration of travel time, and a mode of travel.
     """
-    def __init__(self, waypoints, duration_seconds, mode):
+    def __init__(self, waypoints, mode, duration_seconds):
         self.waypoints = waypoints
-        self.duration_seconds = duration_seconds
         self.mode = mode
+        self.duration_seconds = duration_seconds
 
     def __eq__(self, other):
         """Routes are considered equal if they have the same waypoints in the
@@ -67,36 +66,49 @@ class Route(object):
     def __json__(self):
         return {
             'waypoints': [waypoint.__json__() for waypoint in self.waypoints],
-            'duration_seconds': self.duration_seconds,
             'mode': self.mode,
+            'duration_seconds': self.duration_seconds,
         }
 
 
-class RouteStat(object):
-    def __init__(self, waypoints, total_frequency, normalized_frequency,
-                 total_duration_seconds, normalized_total_duration,
-                 avg_duration_seconds, normalized_avg_duration):
+class Statistic(object):
+    def __init__(self, name, value, normalized_value):
+        self.name = name
+        self.value = value
+        self.normalized_value = normalized_value
+
+    @staticmethod
+    def normalize_value(val, min_, max_):
+        normalized = (val - min_) / (max_ - min_)
+        return normalized
+
+    @staticmethod
+    def normalize_values_map(values_map):
+        min_value = min(values_map.values())
+        max_value = max(values_map.values())
+        return {
+            key: Statistic.normalize_value(value, min_value, max_value)
+            for key, value in values_map.items()
+        }
+
+
+class RouteStatistic(object):
+    def __init__(self, waypoints, mode, statistics):
 
         self.waypoints = waypoints
-
-        self.total_frequency = total_frequency
-        self.normalized_frequency = normalized_frequency
-
-        self.total_duration_seconds = total_duration_seconds
-        self.normalized_total_duration = normalized_total_duration
-
-        self.avg_duration_seconds = avg_duration_seconds
-        self.normalized_avg_duration = normalized_avg_duration
+        self.mode = mode
+        self.statistics = statistics
 
     def __json__(self):
         return {
             'waypoints': [waypoint.__json__() for waypoint in self.waypoints],
-            'total_frequency': self.total_frequency,
-            'normalized_frequency': self.normalized_frequency,
-            'total_duration_seconds': self.total_duration_seconds,
-            'normalized_total_duration': self.normalized_total_duration,
-            'avg_duration_seconds': self.avg_duration_seconds,
-            'normalized_avg_duration': self.normalized_avg_duration,
+            'mode': self.mode,
+            'statistics':  {
+                statistic.name: {
+                    'value': statistic.value,
+                    'normalized_value': statistic.normalized_value,
+                } for statistic in self.statistics
+            }
         }
 
 
@@ -107,48 +119,42 @@ class Routes(object):
         routes = self.get_routes()
 
         frequencies = Counter(routes)
-
-        # TODO refact, e.g. "normalize_dict_values"?
-        min_frequency = min(frequencies.values())
-        max_frequency = max(frequencies.values())
-        normalized_frequencies = {
-            route: normalize_value(frequency, min_frequency, max_frequency)
-            for route, frequency in frequencies.items()
-        }
+        normalized_frequencies = Statistic.normalize_values_map(frequencies)
 
         total_durations = defaultdict(int)
         for route in routes:
             total_durations[route] += route.duration_seconds
-
-        min_duration = min(total_durations.values())
-        max_duration = max(total_durations.values())
-        normalized_total_durations = {
-            route: normalize_value(duration, min_duration, max_duration)
-            for route, duration in total_durations.items()
-        }
+        normalized_total_durations = Statistic.normalize_values_map(
+            total_durations)
 
         avg_durations = {
             route: total_durations[route] / frequencies[route]
-            for route in frequencies.keys()
+            for route in total_durations.keys()
         }
-
-        min_avg_duration = min(avg_durations.values())
-        max_avg_duration = max(avg_durations.values())
-        normalized_avg_durations = {
-            route: normalize_value(avg_duration, min_avg_duration,
-                                   max_avg_duration)
-            for route, avg_duration in avg_durations.items()
-        }
+        normalized_avg_durations = Statistic.normalize_values_map(
+            avg_durations)
 
         return [
-            RouteStat(
+            RouteStatistic(
                 waypoints=route.waypoints,
-                total_frequency=frequency,
-                normalized_frequency=normalized_frequencies[route],
-                total_duration_seconds=total_durations[route],
-                normalized_total_duration=normalized_total_durations[route],
-                avg_duration_seconds=avg_durations[route],
-                normalized_avg_duration=normalized_avg_durations[route],
+                mode=route.mode,
+                statistics=[
+                    Statistic(
+                        'frequency',
+                        frequencies[route],
+                        normalized_frequencies[route],
+                    ),
+                    Statistic(
+                        'total_duration',
+                        total_durations[route],
+                        normalized_total_durations[route],
+                    ),
+                    Statistic(
+                        'average_duration',
+                        avg_durations[route],
+                        normalized_avg_durations[route],
+                    ),
+                ]
             ) for route, frequency in frequencies.items()
         ]
 
@@ -181,7 +187,7 @@ class CaBiRoutes(Routes):
                     station_waypoints[trip['start_station']],
                     station_waypoints[trip['end_station']],
                 ),
-                duration_seconds=trip['duration_seconds'],
                 mode='bicycling',
+                duration_seconds=trip['duration_seconds'],
             ) for trip in trips
         ]

@@ -1,7 +1,7 @@
-import PolylineLib from "@mapbox/polyline";
-import React from "react";
-import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from "react-google-maps";
-import InfoBox from "react-google-maps/lib/components/addons/InfoBox";
+import PolylineLib from '@mapbox/polyline';
+import React from 'react';
+import { withScriptjs, withGoogleMap, GoogleMap, Polyline } from 'react-google-maps';
+import InfoBox from 'react-google-maps/lib/components/addons/InfoBox';
 
 const Map = withScriptjs(withGoogleMap((props) => (
     <GoogleMap
@@ -16,7 +16,7 @@ export default class PolylineHeatMap extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            polylines: props.polylines,
+            activePolyline: null,
             infoBox: {}
         };
     }
@@ -54,22 +54,11 @@ export default class PolylineHeatMap extends React.Component {
         return hexColor;
     }
 
-    updatePolylineState(path, opts) {
-        this.setState(prevState => (
-            {
-                polylines: prevState.polylines.map((polyline) => {
-                    if (polyline.path == path) {
-                        return {...polyline, ...opts};
-                    }
-                    return polyline;
-                })
-            }
-        ));
-    }
-
     handlePolylineMouseOver(e, polyline) {
-        this.updatePolylineState(polyline.path, {isHovering: true});
-        this.setState({infoBox: {isVisible: true, position: e.latLng, activePolyline: polyline}});
+        this.setState({
+            activePolyline: polyline.path,
+            infoBox: {isVisible: true, position: e.latLng, activePolyline: polyline}
+        });
     }
 
     handlePolylineMouseMove(e, polyline) {
@@ -77,8 +66,10 @@ export default class PolylineHeatMap extends React.Component {
     }
 
     handlePolylineMouseOut(e, polyline) {
-        this.updatePolylineState(polyline.path, {isHovering: false});
-        this.setState({infoBox: {isVisible: false}});
+        this.setState({
+            activePolyline: null,
+            infoBox: {isVisible: false}
+        });
     }
 
     render() {
@@ -94,29 +85,33 @@ export default class PolylineHeatMap extends React.Component {
             >
                 {this.state.infoBox.isVisible && (
                     <InfoBox position={this.state.infoBox.position} options={{closeBoxURL: ''}}>
-                        <div style={{backgroundColor: '#FFF', padding: '10px', borderRadius: '0 10px 10px 10px'}}>
+                        <div style={{backgroundColor: '#FFF', padding: '10px', whiteSpace: 'nowrap', borderRadius: '0 10px 10px 10px'}}>
                             <div style={{userSelect: 'none'}}>
-                                <p>From: {this.state.infoBox.activePolyline.waypoints[0].name}</p>
+                                <p style={{marginTop: 0}}>From: {this.state.infoBox.activePolyline.waypoints[0].name}</p>
                                 <p>To: {this.state.infoBox.activePolyline.waypoints[this.state.infoBox.activePolyline.waypoints.length - 1].name}</p>
-                                <p style={{marginBottom: 0}}>Total Trips: {this.state.infoBox.activePolyline.total_frequency}</p>
+                                <p style={{marginBottom: 0}}>Total Trips: {this.state.infoBox.activePolyline.statistics.frequency.value}</p>
                             </div>
                         </div>
                     </InfoBox>
                 )}
-                {this.state.polylines.map((polyline, i) => (
-                    <Polyline
-                        key={polyline.path}
-                        path={PolylineLib.decode(polyline.path).map((rawLatLng) => ({lat: rawLatLng[0], lng: rawLatLng[1]}))}
-                        options={{
-                            strokeColor: polyline.isHovering ? '#0088FF' : this.getHeatMapColorHex(polyline[this.props.weightKey]),
-                            strokeWeight: 6,
-                            zIndex: polyline.isHovering ? 2 : polyline[this.props.weightKey]
-                        }}
-                        onMouseOver={e => this.handlePolylineMouseOver(e, polyline)}
-                        onMouseMove={e => this.handlePolylineMouseMove(e, polyline)}
-                        onMouseOut={e => this.handlePolylineMouseOut(e, polyline)}
-                    />
-                ))}
+                {this.props.polylines.map((polyline, i) => {
+                    const normalizedWeight = polyline.statistics[this.props.weightKey].normalized_value;
+                    const isActive = this.state.activePolyline === polyline.path;
+                    return (
+                        <Polyline
+                            key={polyline.path}
+                            path={PolylineLib.decode(polyline.path).map((rawLatLng) => ({lat: rawLatLng[0], lng: rawLatLng[1]}))}
+                            options={{
+                                strokeColor: isActive ? '#0088FF' : this.getHeatMapColorHex(normalizedWeight),
+                                strokeWeight: 6,
+                                zIndex: isActive ? 2000 : normalizedWeight*1000 // Scale up values <=1 for zIndex
+                            }}
+                            onMouseOver={e => this.handlePolylineMouseOver(e, polyline)}
+                            onMouseMove={e => this.handlePolylineMouseMove(e, polyline)}
+                            onMouseOut={e => this.handlePolylineMouseOut(e, polyline)}
+                        />
+                    );
+                })}
             </Map>
         );
     }

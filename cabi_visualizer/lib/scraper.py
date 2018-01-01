@@ -122,7 +122,7 @@ class CaBiScraper(object):
                         minutes=prop_data.minute,
                         seconds=prop_data.second,
                     )
-                    prop_data = prop_data.seconds
+                    prop_data = int(prop_data.total_seconds())
 
                 trip[prop_key] = prop_data
             trips.append(trip)

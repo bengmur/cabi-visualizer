@@ -1,35 +1,32 @@
-import React from "react";
-import { FormGroup, ControlLabel, FormControl, Button } from "react-bootstrap";
+import React from 'react';
+
+import MaterialTextInput from './MaterialTextInput';
+import MaterialButton from './MaterialButton';
 
 export default class LoginForm extends React.Component {
     render() {
         return (
-            <form onSubmit={this.props.isLoading ? null : this.props.handleLoginFormSubmit}>
-                <FormGroup controlId="username">
-                    <ControlLabel>Username</ControlLabel>
-                    <FormControl
-                        name="username"
-                        type="text"
-                        onChange={this.props.handleInputChange}
-                    />
-                </FormGroup>
-                <FormGroup controlId="password">
-                    <ControlLabel>Password</ControlLabel>
-                    <FormControl
-                        name="password"
-                        type="password"
-                        onChange={this.props.handleInputChange}
-                    />
-                </FormGroup>
-                <Button
+            <form onSubmit={this.props.isLoading ? null : this.props.handleLoginFormSubmit} style={{display: 'flex', flexDirection: 'column'}}>
+                <MaterialTextInput
+                    name="username"
+                    label="Username"
+                    defaultValue={this.props.defaultUsername}
+                    onChangeHandler={this.props.handleInputChange}
+                />
+                <MaterialTextInput
+                    name="password"
+                    type="password"
+                    label="Password"
+                    defaultValue={this.props.defaultPassword}
+                    onChangeHandler={this.props.handleInputChange}
+                />
+
+                <MaterialButton
                     type="submit"
-                    bsStyle="primary"
-                    bsSize="large"
-                    block
                     disabled={this.props.isLoading}
-                >
-                    {this.props.isLoading ? this.props.loadingText : this.props.submitText}
-                </Button>
+                    highlight={true}
+                    label={this.props.submitText}
+                />
             </form>
         );
     }
