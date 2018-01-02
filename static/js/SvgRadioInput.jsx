@@ -8,15 +8,15 @@ export default class SvgRadioInput extends React.Component {
         super(props);
         this.state = {active: false};
 
-        this.handleMouseDown = this.handleMouseDown.bind(this);
-        this.handleMouseUp = this.handleMouseUp.bind(this);
+        this.setActive = this.setActive.bind(this);
+        this.setNotActive = this.setNotActive.bind(this);
     }
 
-    handleMouseDown() {
+    setActive() {
         this.setState({active: true});
     }
 
-    handleMouseUp() {
+    setNotActive() {
         this.setState({active: false});
     }
 
@@ -24,8 +24,9 @@ export default class SvgRadioInput extends React.Component {
         return (
             <label
                 className={css(styles.label)}
-                onMouseDown={this.handleMouseDown}
-                onMouseUp={this.handleMouseUp}
+                onMouseDown={this.setActive}
+                onMouseUp={this.setNotActive}
+                onMouseLeave={this.setNotActive}
             >
                 <input
                     type="radio"
