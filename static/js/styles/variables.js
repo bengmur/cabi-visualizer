@@ -1,4 +1,5 @@
 export const colors = {
+    activeDarker: '#0B74C7',
     activeDark: '#0D8AEE',
     active: '#2196F3',
     activeLight: '#BCE0DB',
@@ -10,6 +11,7 @@ export const colors = {
     mutedLight: '#E1E1E1',
     mutedLighter: '#EEE',
 
+    heavyDark: '#656565',
     heavy: '#808080',
 
     black: '#000',

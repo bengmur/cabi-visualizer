@@ -12,20 +12,27 @@ const config = {
     module: {
         rules: [
             {
-                test: /\.jsx?/,
+                test: /\.jsx$/,
                 exclude: /node_modules/,
                 use: 'babel-loader'
             },
             {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader']
+                test: /\.svg$/,
+                use: [
+                    {
+                        loader: "babel-loader"
+                    },
+                    {
+                        loader: "react-svg-loader",
+                        options: {
+                            jsx: true
+                        }
+                    }
+                ]
             },
             {
-                test: /\.(png|jpg|gif|svg|eot|ttf|woff|woff2)$/,
-                loader: 'url-loader',
-                options: {
-                    limit: 10000
-                }
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader']
             }
         ]
     }

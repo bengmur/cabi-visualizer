@@ -7,8 +7,12 @@ import 'normalize.css/normalize.css';
 import HeatMapScaleBar from './HeatMapScaleBar';
 import PolylineHeatMap from './PolylineHeatMap';
 import LoginForm from './LoginForm';
-import RadioBar from './RadioBar';
 import Spinner from './Spinner';
+import SvgRadioInput from './SvgRadioInput';
+
+import ChartSvg from '../img/chart.svg';
+import TimelapseSvg from '../img/timelapse.svg';
+import TimerSvg from '../img/timer.svg';
 
 import { colors } from './styles/variables';
 
@@ -123,7 +127,7 @@ export default class App extends React.Component {
             <div className={css(styles.sansFont)}>
                 {this.state.googleMapsApiKey && <PolylineHeatMap apiKey={this.state.googleMapsApiKey} polylines={this.state.routes} weightKey={this.state.statisticType} />}
                 <div className={css(
-                    styles.floatingCard,
+                    styles.materialCard,
                     styles.animate,
                     styles.loginFlow,
                     this.state.hasError && styles.loginWithErrorMessage,
@@ -154,17 +158,35 @@ export default class App extends React.Component {
                         </div>
                     )}
                     {showStatistics && (
-                        <div>
-                            <RadioBar
-                                key="0"
+                        <div className={css(styles.flexCol)}>
+                            <SvgRadioInput
                                 name="statisticType"
-                                checkedValue={this.state.statisticType}
-                                availableInputs={[
-                                    {label: 'Trip Frequency', value: 'frequency'},
-                                    {label: 'Average Time Traveled', value: 'average_duration'},
-                                    {label: 'Total Time Traveled', value: 'total_duration'}
-                                ]}
-                                selectHandler={this.handleStatisticTypeChange} />
+                                label="Trip Frequency"
+                                value="frequency"
+                                checked={this.state.statisticType === 'frequency'}
+                                onChange={this.handleStatisticTypeChange}
+                            >
+                                <ChartSvg />
+                            </SvgRadioInput>
+                            <SvgRadioInput
+                                name="statisticType"
+                                label="Average Time Traveled"
+                                value="average_duration"
+                                checked={this.state.statisticType === 'average_duration'}
+                                onChange={this.handleStatisticTypeChange}
+                            >
+                                <TimerSvg />
+                            </SvgRadioInput>
+                            <SvgRadioInput
+                                name="statisticType"
+                                label="Total Time Traveled"
+                                value="total_duration"
+                                checked={this.state.statisticType === 'total_duration'}
+                                onChange={this.handleStatisticTypeChange}
+                            >
+                                <TimelapseSvg />
+                            </SvgRadioInput>
+
                             <HeatMapScaleBar key="1"
                                 lowerBound={this.state.statisticLowerBound}
                                 upperBound={this.state.statisticUpperBound}
@@ -208,10 +230,11 @@ const styles = StyleSheet.create({
         margin: '0'
     },
 
-    floatingCard: {
+    materialCard: {
         position: 'fixed',
         padding: '20px',
-        border: '1px solid #ccc',
+        border: `1px solid ${colors.muted}`,
+        boxShadow: '0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23)',
         overflow: 'hidden',
         backgroundColor: colors.white
     },
@@ -244,10 +267,15 @@ const styles = StyleSheet.create({
 
     statisticsFlow: {
         width: '350px',
-        height: '80px',
+        height: '90px',
 
         bottom: '12px',
         left: '50%',
         transform: 'translateX(-50%)'
+    },
+
+    flexCol: {
+        display: 'flex',
+        flexDirection: 'column'
     }
 });
