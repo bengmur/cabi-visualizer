@@ -8,15 +8,13 @@ export default class HeatMapScaleBar extends React.Component {
 
         return (
             <div className={css(styles.wrapper)}>
+                <div className={css(styles.label, styles.left, styles.height)}>
+                    {this.props.lowerBound}
+                </div>
                 <div className={css(styles.gradient, styles.bar, styles.height)}>
-                    <div className={css(styles.clearfix, styles.labels)}>
-                        <span className={css(styles.height, styles.left)}>
-                            {this.props.lowerBound}
-                        </span>
-                        <span className={css(styles.height, styles.right)}>
-                            {this.props.upperBound}
-                        </span>
-                    </div>
+                </div>
+                <div className={css(styles.label, styles.right, styles.height)}>
+                    {this.props.upperBound}
                 </div>
             </div>
         );
@@ -24,16 +22,19 @@ export default class HeatMapScaleBar extends React.Component {
 }
 
 const styles = StyleSheet.create({
-    wrapper: {paddingBottom: '15px'},
+    wrapper: {
+        display: 'flex',
+        paddingBottom: '15px'
+    },
 
     gradient: {
         background: `linear-gradient(to right, ${colors.pureGreen}, ${colors.pureYellow}, ${colors.pureRed})`
     },
 
     bar: {
-        width: '100%',
+        width: '30%',
         borderRadius: '2px',
-        boxShadow: 'rgba(0, 0, 0, 0.13) 0px 5px 10px, rgba(0, 0, 0, 0.13) 0px 3px 3px;'
+        boxShadow: 'rgba(0, 0, 0, 0.13) 0px 5px 10px, rgba(0, 0, 0, 0.13) 0px 3px 3px'
     },
 
     height: {
@@ -41,13 +42,15 @@ const styles = StyleSheet.create({
         height: '16px'
     },
 
-    labels: {
-        fontSize: '14px',
-        fontWeight: '200',
-        padding: '0 10px'
+    label: {
+        width: '35%',
+        fontSize: '12px',
+        fontWeight: '300',
+        textAlign: 'center',
+        letterSpacing: '1px',
+        color: colors.heavy
     },
 
-    clearfix: {overflow: 'auto'},
-    left: {float: 'left'},
-    right: {float: 'right'}
+    left: {borderLeft: `1px solid ${colors.muted}`},
+    right: {borderRight: `1px solid ${colors.muted}`}
 });
