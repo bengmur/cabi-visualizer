@@ -4,10 +4,10 @@ from abc import (
 )
 from collections import Counter, defaultdict
 
-from humanfriendly import format_timespan
-
-from cabi_visualizer.lib.scraper import (
-    CaBiScraper,
+from cabi_visualizer.lib.scraper import CaBiScraper
+from cabi_visualizer.lib.format import (
+    format_duration,
+    pluralize,
 )
 
 
@@ -126,9 +126,8 @@ class Routes(object):
         frequencies = Counter(routes)
 
         formatted_frequencies = {
-            route: '{} {}'.format(
-                value,
-                'trip' if value == 1 else 'trips',
+            route: pluralize(
+                value, 'trip'
             ) for route, value in frequencies.items()
         }
 
@@ -140,9 +139,8 @@ class Routes(object):
             total_durations[route] += route.duration_seconds
 
         formatted_total_durations = {
-            route: format_timespan(
-                value,
-                max_units=2,
+            route: format_duration(
+                value
             ) for route, value in total_durations.items()
         }
 
@@ -156,9 +154,8 @@ class Routes(object):
         }
 
         formatted_avg_durations = {
-            route: format_timespan(
-                round(value),
-                max_units=2,
+            route: format_duration(
+                round(value)
             ) for route, value in avg_durations.items()
         }
 
