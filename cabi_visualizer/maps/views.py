@@ -6,7 +6,7 @@ from flask import (
 )
 import googlemaps
 
-from cabi_visualizer.lib.utils import require_request_params
+from cabi_visualizer.lib.view_utils import require_request_params
 
 maps_views = Blueprint('maps', __name__)
 

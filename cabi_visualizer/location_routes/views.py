@@ -9,7 +9,7 @@ from cabi_visualizer.lib.scraper import (
     LoginException,
     ScraperException,
 )
-from cabi_visualizer.lib.utils import require_request_params
+from cabi_visualizer.lib.view_utils import require_request_params
 from cabi_visualizer.location_routes.models import CaBiRoutes
 
 location_routes_views = Blueprint('location_routes_views', __name__)
