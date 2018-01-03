@@ -4,6 +4,8 @@ from abc import (
 )
 from collections import Counter, defaultdict
 
+from humanfriendly import format_timespan
+
 from cabi_visualizer.lib.scraper import (
     CaBiScraper,
 )
@@ -72,9 +74,10 @@ class Route(object):
 
 
 class Statistic(object):
-    def __init__(self, name, value, normalized_value):
+    def __init__(self, name, formatted_value, raw_value, normalized_value):
         self.name = name
-        self.value = value
+        self.formatted_value = formatted_value
+        self.raw_value = raw_value
         self.normalized_value = normalized_value
 
     @staticmethod
@@ -105,7 +108,8 @@ class RouteStatistic(object):
             'mode': self.mode,
             'statistics':  {
                 statistic.name: {
-                    'value': statistic.value,
+                    'formatted_value': statistic.formatted_value,
+                    'raw_value': statistic.raw_value,
                     'normalized_value': statistic.normalized_value,
                 } for statistic in self.statistics
             }
@@ -118,19 +122,46 @@ class Routes(object):
     def get_route_stats(self):
         routes = self.get_routes()
 
+        # Frequency
         frequencies = Counter(routes)
+
+        formatted_frequencies = {
+            route: '{} {}'.format(
+                value,
+                'trip' if value == 1 else 'trips',
+            ) for route, value in frequencies.items()
+        }
+
         normalized_frequencies = Statistic.normalize_values_map(frequencies)
 
+        # Total duration
         total_durations = defaultdict(int)
         for route in routes:
             total_durations[route] += route.duration_seconds
+
+        formatted_total_durations = {
+            route: format_timespan(
+                value,
+                max_units=2,
+            ) for route, value in total_durations.items()
+        }
+
         normalized_total_durations = Statistic.normalize_values_map(
             total_durations)
 
+        # Average duration
         avg_durations = {
             route: total_durations[route] / frequencies[route]
             for route in total_durations.keys()
         }
+
+        formatted_avg_durations = {
+            route: format_timespan(
+                round(value),
+                max_units=2,
+            ) for route, value in avg_durations.items()
+        }
+
         normalized_avg_durations = Statistic.normalize_values_map(
             avg_durations)
 
@@ -140,19 +171,22 @@ class Routes(object):
                 mode=route.mode,
                 statistics=[
                     Statistic(
-                        'frequency',
-                        frequencies[route],
-                        normalized_frequencies[route],
+                        name='frequency',
+                        formatted_value=formatted_frequencies[route],
+                        raw_value=frequencies[route],
+                        normalized_value=normalized_frequencies[route],
                     ),
                     Statistic(
-                        'total_duration',
-                        total_durations[route],
-                        normalized_total_durations[route],
+                        name='total_duration',
+                        formatted_value=formatted_total_durations[route],
+                        raw_value=total_durations[route],
+                        normalized_value=normalized_total_durations[route],
                     ),
                     Statistic(
-                        'average_duration',
-                        avg_durations[route],
-                        normalized_avg_durations[route],
+                        name='average_duration',
+                        formatted_value=formatted_avg_durations[route],
+                        raw_value=avg_durations[route],
+                        normalized_value=normalized_avg_durations[route],
                     ),
                 ]
             ) for route, frequency in frequencies.items()

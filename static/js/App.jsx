@@ -105,8 +105,8 @@ export default class App extends React.Component {
         );
 
         return {
-            statisticLowerBound: lowerBoundRoute.statistics[statisticType].value,
-            statisticUpperBound: upperBoundRoute.statistics[statisticType].value
+            statisticLowerBound: lowerBoundRoute.statistics[statisticType].formatted_value,
+            statisticUpperBound: upperBoundRoute.statistics[statisticType].formatted_value
         };
     }
 

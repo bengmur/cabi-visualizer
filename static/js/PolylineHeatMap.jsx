@@ -97,13 +97,13 @@ export default class PolylineHeatMap extends React.Component {
                                     <span className={css(styles.heavy)}>To:</span> {this.state.infoBox.activePolyline.waypoints[this.state.infoBox.activePolyline.waypoints.length - 1].name}
                                 </p>
                                 <p className={css(styles.infoboxDatapoint)}>
-                                    <span className={css(styles.heavy)}>Total Trips:</span> {this.state.infoBox.activePolyline.statistics.frequency.value}
+                                    <span className={css(styles.heavy)}>Total Trips:</span> {this.state.infoBox.activePolyline.statistics.frequency.formatted_value}
                                 </p>
                                 <p className={css(styles.infoboxDatapoint)}>
-                                    <span className={css(styles.heavy)}>Average Time Traveled:</span> {this.state.infoBox.activePolyline.statistics.average_duration.value}
+                                    <span className={css(styles.heavy)}>Average Time Traveled:</span> {this.state.infoBox.activePolyline.statistics.average_duration.formatted_value}
                                 </p>
                                 <p className={css(styles.infoboxDatapoint, styles.flushBottom)}>
-                                    <span className={css(styles.heavy)}>Total Time Traveled:</span> {this.state.infoBox.activePolyline.statistics.total_duration.value}
+                                    <span className={css(styles.heavy)}>Total Time Traveled:</span> {this.state.infoBox.activePolyline.statistics.total_duration.formatted_value}
                                 </p>
                             </div>
                         </div>
